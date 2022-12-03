@@ -59,7 +59,18 @@ script:
     then:
       - lambda: !lambda |-
           float speed = id(train_speed);
-          float power = (1.02 * speed) - (0.0288 * pow(speed, 2)) + (0.000288 * pow(speed, 3));
+          float power;
+          if(id(silent_mode)){
+            if(speed == 0){
+              power = 0;
+            } else {
+              speed = speed * 1.068;
+              power = 7.961 - (0.00922 * speed) + (0.0113 * pow(speed, 2)) - (0.000292 * pow(speed, 3)) + (0.00000249 * pow(speed, 4));
+            }
+          } else {
+            power = (1.02 * speed) - (0.0288 * pow(speed, 2)) + (0.000288 * pow(speed, 3));
+          }
+           
           power = std::min(power, 100.0f);
           
           float frequency;
