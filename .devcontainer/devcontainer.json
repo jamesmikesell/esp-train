@@ -1,0 +1,38 @@
+{
+	"name": "ESP Home",
+	"build": {
+		"dockerfile": "Dockerfile",
+	},
+	"containerEnv": {
+		"TZ": "America/New_York",
+		"SPRING_PROFILES_ACTIVE": "dev-container"
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			},
+			"extensions": [
+				"Angular.ng-template",
+				"streetsidesoftware.code-spell-checker",
+				"dbaeumer.vscode-eslint",
+				"mhutchie.git-graph",
+				"eamodio.gitlens",
+			]
+		}
+	},
+	"remoteUser": "root",
+	"workspaceFolder": "/workspace/container-workspace",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace/host-machine-workspace,type=bind,consistency=cached",
+	"onCreateCommand": "(cp /workspace/host-machine-workspace/.devcontainer/post-create.sh /workspace && chmod +x /workspace/post-create.sh && /workspace/post-create.sh)",
+	"postAttachCommand": "(cd ${containerWorkspaceFolder} && git fetch host -p)",
+	"mounts": [
+		"source=esp-home-workspace,target=/workspace/container-workspace,type=volume",
+	],
+	"portsAttributes": {
+		"4200": {
+			"label": "Angular UI",
+			"onAutoForward": "silent"
+		}
+	}
+}
