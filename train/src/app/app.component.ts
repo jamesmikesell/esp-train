@@ -43,13 +43,10 @@ export class AppComponent {
 
   private async send(): Promise<void> {
     this.lastUpdate = Date.now();
-    let call = this.httpClient
-      .post<any>(
-        `http://esp-train.local/fan/train_speed_slider/turn_on?speed_level=${this.valueToSend}`,
-        {}
-      );
+    let state = this.valueToSend ? "on" : "off";
 
-    await firstValueFrom(call);
+    await firstValueFrom(this.httpClient.post<any>(`/fan/train_speed_slider/turn_on?speed_level=${this.valueToSend}`, {}));
+    await firstValueFrom(this.httpClient.post<any>(`/fan/train_speed_slider/turn_${state}`, {}));
   }
 
 }
