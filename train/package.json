@@ -4,12 +4,15 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --output-hashing=none",
+    "package": "cat load.js dist/train/polyfills.js dist/train/runtime.js dist/train/main.js > ../docs/out.js",
+    "bundle": "npm run build && npm run package",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
   "dependencies": {
+    "@angular-slider/ngx-slider": "^2.0.4",
     "@angular/animations": "^15.0.0",
     "@angular/common": "^15.0.0",
     "@angular/compiler": "^15.0.0",
