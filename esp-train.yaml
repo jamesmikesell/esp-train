@@ -1,0 +1,126 @@
+esphome:
+  name: esp-train
+
+esp8266:
+  board: nodemcuv2
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "esp-train"
+    password: !secret wifi_password
+
+captive_portal:
+
+
+web_server:
+  port: 80
+  js_url: "https://jamesmikesell.github.io/esp-train/out.js"
+
+
+
+output:
+  - platform: esp8266_pwm
+    id: pwm_output
+    pin: D5
+    frequency: 100 Hz
+  - platform: template
+    id: fake_output
+    type: float
+    write_action:
+      - lambda: !lambda |-
+          // ESP_LOGD("main", "Fake Output %f", state);
+
+
+globals:
+   - id: train_speed
+     type: float
+     initial_value: "0.0"
+   - id: silent_mode
+     type: bool
+     initial_value: "false"
+
+
+script:
+  - id: set_train_speed
+    then:
+      - lambda: !lambda |-
+          float speed = id(train_speed);
+          float power = (1.02 * speed) - (0.0288 * pow(speed, 2)) + (0.000288 * pow(speed, 3));
+          power = std::min(power, 100.0f);
+          
+          float frequency;
+          if(id(silent_mode))
+            frequency = 50;
+          else
+            frequency = 0.869 + (0.746 * power) - (0.0342 * pow(power, 2)) + (0.000723 * pow(power, 3));
+
+          //ESP_LOGD("main", "Train Power: %f Frequency: %f", power, frequency);
+          
+          id(pwm_output).set_frequency(frequency);
+          id(pwm_output).set_level(power / 100.0);    
+
+
+fan:
+  - platform: speed # or any other platform
+    name: Train Speed Slider
+    output: fake_output
+    id: my_fan
+    on_turn_off:
+      - lambda: !lambda |-
+          id(my_fan).speed = 0;
+          id(train_speed) = 0;
+          id(set_train_speed).execute();
+    on_turn_on:
+      - lambda: !lambda |-
+          id(my_fan).speed = 0;
+          id(train_speed) = 0;
+          id(set_train_speed).execute();
+    on_speed_set:
+      - lambda: !lambda |-
+          id(train_speed) = id(my_fan).speed;
+          id(set_train_speed).execute();
+
+
+number:
+  - platform: template
+    name: Train Speed
+    id: number_speed
+    min_value: 0
+    max_value: 100
+    step: 1
+    mode: box
+    set_action:
+      then:
+        - lambda: !lambda |-
+            id(train_speed) = x;
+            id(set_train_speed).execute();
+
+
+switch:
+  - platform: template
+    name: "Smooth Mode"
+    lambda: |-
+        return id(silent_mode);
+    turn_on_action:
+      - lambda: |-
+          id(silent_mode) = true;
+          id(set_train_speed).execute();
+    turn_off_action:
+      - lambda: |-
+          id(silent_mode) = false;
+          id(set_train_speed).execute();
+
