@@ -4,3 +4,4 @@ FROM mcr.microsoft.com/devcontainers/typescript-node:16-bullseye
 RUN npm install -g @angular/cli
 # RUN git config --global oh-my-zsh.hide-dirty 1
 # RUN git config --global oh-my-zsh.hide-info 1
+# wget -O- https://aka.ms/install-vscode-server/setup.sh | sh
